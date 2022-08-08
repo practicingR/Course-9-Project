@@ -13,4 +13,58 @@ In this project, we will do two things:
 
 2. Use Slidify or Rstudio Presenter to prepare a reproducible pitch presentation about the application
 
-## 
+This application creates a histogram that displays the number of times an iris flower falls within a certain petal size. The user can choose the dimension, either petal length or width.
+
+The link for the shiny app can be found [here](http://127.0.0.1:7192/) and the code can be found [here](https://github.com/practicingR/Course-9-Project).
+
+## Dataset
+
+This shiny app focuses on the petal.length and petal.width columns to plot in the histogram.
+```{r}
+head(iris)
+```
+
+## UI Code
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE, eval=FALSE}
+
+# Data Processing for Iris dataset
+
+library(shiny)
+library(ggplot2)
+library(dplyr)
+irisData <- iris
+
+# Define UI for application that creates a histogram
+
+shinyUI(fluidPage(
+  selectInput(inputId = "dimToPlot", label="Plot Dimension:",
+              choices = c("Length","Width")),
+  plotOutput(outputId = "distPlot")
+))
+```
+
+## Server Code
+
+```{r, echo=TRUE, warning=FALSE, message=FALSE, eval=FALSE}
+# Define server logic required to draw a histogram
+shinyServer(function(input, output) {
+  
+  column <- reactive({paste0("Petal.",input$dimToPlot)})
+  data <- eventReactive(input$dimToPlot, {
+    irisData %>% 
+      select(column()) %>%
+      filter(get(column()) < 2)
+  })
+  
+  # Histogram output
+  output$distPlot <- renderPlot({
+    ggplot(environment = environment(),
+           data = data(), 
+           aes_string(x = column())) +
+      geom_histogram(color="white", fill="purple",bins = 10,boundary=0) 
+  })
+  
+})
+
+```
